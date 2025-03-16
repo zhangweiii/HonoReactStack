@@ -60,7 +60,7 @@ This template provides a complete solution for building modern full-stack applic
 # Create project using Cloudflare template
 npm create cloudflare@latest
 
-# Select "npm create cloudflare"
+# Select "Template from a GitHub repo"
 # Then type: https://github.com/zhangweiii/HonoReactStack
 
 # Install dependencies

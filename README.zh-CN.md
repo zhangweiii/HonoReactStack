@@ -60,7 +60,7 @@
 # 使用Cloudflare模板创建项目
 npm create cloudflare@latest
 
-# 选择 "npm create cloudflare"
+# 选择 "Template from a GitHub repo"
 # 然后键入: https://github.com/zhangweiii/HonoReactStack
 
 # 安装依赖
