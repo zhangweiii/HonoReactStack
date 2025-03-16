@@ -57,9 +57,11 @@ This template provides a complete solution for building modern full-stack applic
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/hono-react-template.git my-app
-cd my-app
+# Create project using Cloudflare template
+npm create cloudflare@latest
+
+# Select "npm create cloudflare"
+# Then type: https://github.com/zhangweiii/HonoReactStack
 
 # Install dependencies
 npm install

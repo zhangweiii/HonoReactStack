@@ -57,9 +57,11 @@
 ### 安装
 
 ```bash
-# 克隆仓库
-git clone https://github.com/yourusername/hono-react-template.git my-app
-cd my-app
+# 使用Cloudflare模板创建项目
+npm create cloudflare@latest
+
+# 选择 "npm create cloudflare"
+# 然后键入: https://github.com/zhangweiii/HonoReactStack
 
 # 安装依赖
 npm install
