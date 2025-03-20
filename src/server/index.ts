@@ -33,12 +33,23 @@ server.get('/health', (c) => c.json({ status: 'ok', env: isDev ? 'development' :
 
 // 静态资源处理
 if (isDev) {
-  // 在开发环境中，返回简单的响应
+  // 在开发环境中，为所有 SPA 路由返回适当的响应
+  // 这将捕获所有客户端路由，如 /users, /about 等
   server.get('*', (c) => {
+    const url = new URL(c.req.url)
+    const path = url.pathname
+
+    // 检查是否是 API 路由 (这些应该已经被前面的路由处理器处理)
+    if (path.startsWith('/api/')) {
+      return c.json({ error: 'API 路由不存在' }, 404)
+    }
+
+    // 对于所有其他路由，返回开发环境消息
     return c.json({
-      message: '开发环境中，前端资源由 Vite 提供，请访问 http://localhost:3000',
+      message: `开发环境中，前端资源由 Vite 提供，请访问 http://localhost:3000${path}`,
       status: 'ok',
-      env: 'development'
+      env: 'development',
+      path: path
     })
   })
 } else {
@@ -48,16 +59,34 @@ if (isDev) {
     if (!c.env.ASSETS) {
       return c.text('ASSETS 绑定未配置', 500)
     }
-    
+
+    const url = new URL(c.req.url)
+    const path = url.pathname
+
+    // 检查是否是 API 路由 (这些应该已经被前面的路由处理器处理)
+    if (path.startsWith('/api/') && !path.startsWith('/api/users')) {
+      return c.json({ error: 'API 路由不存在' }, 404)
+    }
+
     try {
       // 尝试获取静态资源
-      return await c.env.ASSETS.fetch(new Request(c.req.url, {
+      const response = await c.env.ASSETS.fetch(new Request(c.req.url, {
         method: c.req.method,
         headers: c.req.raw.headers
       }))
+
+      // 如果资源存在，返回它
+      if (response.status !== 404) {
+        return response
+      }
+
+      // 否则回退到 index.html 以支持 SPA 路由
+      return await c.env.ASSETS.fetch(new Request(`${url.origin}/index.html`, {
+        method: 'GET',
+        headers: c.req.raw.headers
+      }))
     } catch (e) {
-      // 如果静态资源不存在，返回 index.html 以支持 SPA 路由
-      const url = new URL(c.req.url)
+      // 如果出现错误，返回 index.html 以支持 SPA 路由
       return await c.env.ASSETS.fetch(new Request(`${url.origin}/index.html`, {
         method: 'GET',
         headers: c.req.raw.headers
