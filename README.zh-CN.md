@@ -103,7 +103,7 @@ import { useUserStore } from '@/store/userStore'
 
 function Component() {
   const { users, fetchUsers, addUser } = useUserStore()
-  
+
   // 使用 store 中的状态和方法
 }
 ```
@@ -117,7 +117,7 @@ import { useThemeStore } from '@/store/themeStore'
 
 function Component() {
   const { theme, toggleTheme } = useThemeStore()
-  
+
   // 使用 theme 状态和切换方法
 }
 ```
@@ -131,7 +131,7 @@ import { useNotifications } from '@/components/Notifications'
 
 function Component() {
   const { showSuccess, showError } = useNotifications()
-  
+
   // 显示通知
   showSuccess('操作成功')
   showError('发生错误')
@@ -146,8 +146,11 @@ function Component() {
 # 登录到 Cloudflare
 npx wrangler login
 
+# 编译前端代码
+npm run build
+
 # 部署应用
-npm run deploy
+npm run worker:deploy
 ```
 
 ## 自定义

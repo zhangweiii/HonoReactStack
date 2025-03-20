@@ -103,7 +103,7 @@ import { useUserStore } from '@/store/userStore'
 
 function Component() {
   const { users, fetchUsers, addUser } = useUserStore()
-  
+
   // Use state and methods from the store
 }
 ```
@@ -117,7 +117,7 @@ import { useThemeStore } from '@/store/themeStore'
 
 function Component() {
   const { theme, toggleTheme } = useThemeStore()
-  
+
   // Use theme state and toggle method
 }
 ```
@@ -131,7 +131,7 @@ import { useNotifications } from '@/components/Notifications'
 
 function Component() {
   const { showSuccess, showError } = useNotifications()
-  
+
   // Show notifications
   showSuccess('Operation successful')
   showError('An error occurred')
@@ -146,8 +146,11 @@ function Component() {
 # Login to Cloudflare
 npx wrangler login
 
+# Build the frontend code
+npm run build
+
 # Deploy the application
-npm run deploy
+npm run worker:deploy
 ```
 
 ## Customization
