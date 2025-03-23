@@ -1,0 +1,12 @@
+{
+  "appTitle": "Hono + React 示例",
+  "nav": {
+    "home": "首页",
+    "users": "用户",
+    "about": "关于",
+    "menu": "菜单"
+  },
+  "footer": {
+    "copyright": "Hono + React 示例项目"
+  }
+}

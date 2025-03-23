@@ -1,0 +1,13 @@
+{
+  "welcome": "欢迎使用 Hono + React + shadcn UI",
+  "description": "这是一个使用 Hono 作为后端，React 和 shadcn UI 作为前端的示例项目。",
+  "apiMessage": {
+    "title": "来自 API 的消息",
+    "description": "这个消息从 Hono API 获取",
+    "loading": "加载中...",
+    "error": "错误: ",
+    "retry": "重试",
+    "noMessage": "无消息",
+    "refresh": "刷新消息"
+  }
+}

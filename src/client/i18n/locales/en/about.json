@@ -1,0 +1,34 @@
+{
+  "title": "About This Project",
+  "description": "This is a demo project showcasing the integration of Hono, React, and shadcn UI.",
+  "features": {
+    "title": "Features",
+    "list": [
+      "Fast API with Hono",
+      "Modern UI with React",
+      "Beautiful components with shadcn UI",
+      "Type safety with TypeScript",
+      "Styling with Tailwind CSS",
+      "Internationalization with i18next"
+    ]
+  },
+  "technologies": {
+    "title": "Tech Stack",
+    "backend": "Backend",
+    "frontend": "Frontend",
+    "frontendItems": [
+      "React - UI Library",
+      "React Router - Client-side routing",
+      "shadcn UI - Component library",
+      "Tailwind CSS - Styling",
+      "Vite - Build tool"
+    ],
+    "backendItems": [
+      "Hono - Lightweight web framework",
+      "Cloudflare Workers - Edge computing platform"
+    ]
+  },
+  "structure": {
+    "title": "Project Structure"
+  }
+}

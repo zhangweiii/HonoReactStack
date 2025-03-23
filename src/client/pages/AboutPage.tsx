@@ -1,39 +1,40 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { useTranslation } from 'react-i18next'
 
 const AboutPage = () => {
+  const { t } = useTranslation('about')
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">关于本项目</h1>
-      
+      <h1 className="text-3xl font-bold">{t('title')}</h1>
+
       <Card>
         <CardHeader>
-          <CardTitle>技术栈</CardTitle>
+          <CardTitle>{t('technologies.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="text-lg font-medium">前端</h3>
+            <h3 className="text-lg font-medium">{t('technologies.frontend')}</h3>
             <ul className="list-disc pl-6 mt-2">
-              <li>React - 用户界面库</li>
-              <li>React Router - 客户端路由</li>
-              <li>shadcn UI - 组件库</li>
-              <li>Tailwind CSS - 样式</li>
-              <li>Vite - 构建工具</li>
+              {(t('technologies.frontendItems', { returnObjects: true }) as string[]).map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
             </ul>
           </div>
-          
+
           <div>
-            <h3 className="text-lg font-medium">后端</h3>
+            <h3 className="text-lg font-medium">{t('technologies.backend')}</h3>
             <ul className="list-disc pl-6 mt-2">
-              <li>Hono - 轻量级 Web 框架</li>
-              <li>Cloudflare Workers - 边缘计算平台</li>
+              {(t('technologies.backendItems', { returnObjects: true }) as string[]).map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
             </ul>
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader>
-          <CardTitle>项目结构</CardTitle>
+          <CardTitle>{t('structure.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">

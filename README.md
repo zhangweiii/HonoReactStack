@@ -31,6 +31,7 @@ This template provides a complete solution for building modern full-stack applic
 - 🧩 **Component Library** - Integrated [shadcn/ui](https://ui.shadcn.com/) for beautiful and customizable UI components
 - 📦 **State Management** - Clean and efficient state management with [Zustand](https://zustand-demo.pmnd.rs/)
 - 🎨 **Theme Switching** - Built-in dark/light theme support with persistence
+- 🌐 **Internationalization** - Multi-language support with i18next, currently supporting English and Chinese
 - 🔔 **Notification System** - Built-in notification system for friendly user feedback
 - 📱 **Responsive Design** - Modern layout that adapts to various screen sizes
 - 🚀 **One-Click Deployment** - Easy deployment to Cloudflare Workers
@@ -122,6 +123,26 @@ function Component() {
 }
 ```
 
+### Internationalization
+
+The application supports multiple languages using i18next:
+
+```tsx
+import { useTranslation } from 'react-i18next'
+
+function Component() {
+  const { t, i18n } = useTranslation()
+
+  // Use translation function
+  return <h1>{t('welcome')}</h1>
+
+  // Change language
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng)
+  }
+}
+```
+
 ### Notification Store
 
 Manages in-app notifications, supporting different types of notifications (success, error, warning, info).
@@ -167,6 +188,11 @@ npm run worker:deploy
 ### Modifying Themes
 
 1. Edit the CSS variables in `src/client/styles/globals.css`
+
+### Adding New Languages
+
+1. Create new translation files in `src/client/i18n/locales/[language-code]/`
+2. Update the language selector component in `src/client/i18n/LanguageSelector.tsx`
 
 ## Contributing
 

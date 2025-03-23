@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useApi } from '@/hooks/useApi'
+import { useTranslation } from 'react-i18next'
 
 interface Message {
   message: string
@@ -9,6 +10,7 @@ interface Message {
 
 const HomePage = () => {
   const { data, loading, error, fetchData } = useApi<Message>()
+  const { t } = useTranslation('home')
 
   useEffect(() => {
     fetchMessage()
@@ -17,32 +19,32 @@ const HomePage = () => {
   const fetchMessage = async () => {
     await fetchData({
       endpoint: '/api/hello',
-      onError: (error) => console.error('获取消息失败:', error)
+      onError: (error) => console.error(`${t('apiMessage.error')}:`, error)
     })
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">欢迎使用 Hono + React + shadcn UI</h1>
-      <p className="text-muted-foreground">这是一个使用 Hono 作为后端，React 和 shadcn UI 作为前端的示例项目。</p>
-      
+      <h1 className="text-3xl font-bold">{t('welcome')}</h1>
+      <p className="text-muted-foreground">{t('description')}</p>
+
       <Card>
         <CardHeader>
-          <CardTitle>来自 API 的消息</CardTitle>
-          <CardDescription>这个消息从 Hono API 获取</CardDescription>
+          <CardTitle>{t('apiMessage.title')}</CardTitle>
+          <CardDescription>{t('apiMessage.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p>加载中...</p>
+            <p>{t('apiMessage.loading')}</p>
           ) : error ? (
             <div className="space-y-4">
-              <p className="text-red-500">错误: {error.message}</p>
-              <Button onClick={fetchMessage}>重试</Button>
+              <p className="text-red-500">{t('apiMessage.error')} {error.message}</p>
+              <Button onClick={fetchMessage}>{t('apiMessage.retry')}</Button>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-lg">{data?.message || '无消息'}</p>
-              <Button onClick={fetchMessage}>刷新消息</Button>
+              <p className="text-lg">{data?.message || t('apiMessage.noMessage')}</p>
+              <Button onClick={fetchMessage}>{t('apiMessage.refresh')}</Button>
             </div>
           )}
         </CardContent>

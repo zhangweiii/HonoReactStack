@@ -1,11 +1,14 @@
 import { Link, Outlet } from 'react-router-dom'
 import { ThemeToggle } from './ThemeToggle'
 import { Notifications } from './Notifications'
+import LanguageSelector from '../i18n/LanguageSelector'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const Layout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { t } = useTranslation('common')
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -17,19 +20,20 @@ const Layout = () => {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold">Hono + React 示例</h1>
+            <h1 className="text-xl font-bold">{t('appTitle')}</h1>
             <nav className="hidden md:flex space-x-4">
-              <Link to="/" className="hover:text-primary transition-colors">首页</Link>
-              <Link to="/users" className="hover:text-primary transition-colors">用户</Link>
-              <Link to="/about" className="hover:text-primary transition-colors">关于</Link>
+              <Link to="/" className="hover:text-primary transition-colors">{t('nav.home')}</Link>
+              <Link to="/users" className="hover:text-primary transition-colors">{t('nav.users')}</Link>
+              <Link to="/about" className="hover:text-primary transition-colors">{t('nav.about')}</Link>
             </nav>
           </div>
           <div className="flex items-center space-x-2">
+            <LanguageSelector />
             <ThemeToggle />
             <button
               className="md:hidden p-2 rounded-md hover:bg-muted transition-colors"
               onClick={toggleMenu}
-              aria-label="菜单"
+              aria-label={t('nav.menu')}
             >
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -46,21 +50,21 @@ const Layout = () => {
               className="py-3 border-b border-border hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              首页
+              {t('nav.home')}
             </Link>
             <Link
               to="/users"
               className="py-3 border-b border-border hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              用户
+              {t('nav.users')}
             </Link>
             <Link
               to="/about"
               className="py-3 hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              关于
+              {t('nav.about')}
             </Link>
           </nav>
         </div>
@@ -74,7 +78,7 @@ const Layout = () => {
       {/* 页脚 */}
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p> {new Date().getFullYear()} Hono + React 示例项目</p>
+          <p> {new Date().getFullYear()} {t('footer.copyright')}</p>
         </div>
       </footer>
 

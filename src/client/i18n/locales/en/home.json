@@ -1,0 +1,13 @@
+{
+  "welcome": "Welcome to Hono + React + shadcn UI",
+  "description": "This is an example project using Hono as the backend, React and shadcn UI as the frontend.",
+  "apiMessage": {
+    "title": "Message from API",
+    "description": "This message is fetched from the Hono API",
+    "loading": "Loading...",
+    "error": "Error: ",
+    "retry": "Retry",
+    "noMessage": "No message",
+    "refresh": "Refresh Message"
+  }
+}

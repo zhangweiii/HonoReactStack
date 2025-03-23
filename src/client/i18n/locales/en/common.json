@@ -1,0 +1,12 @@
+{
+  "appTitle": "Hono + React Example",
+  "nav": {
+    "home": "Home",
+    "users": "Users",
+    "about": "About",
+    "menu": "Menu"
+  },
+  "footer": {
+    "copyright": "Hono + React Example Project"
+  }
+}

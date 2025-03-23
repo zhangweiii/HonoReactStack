@@ -1,0 +1,39 @@
+{
+  "title": "用户管理",
+  "description": "这个页面展示了如何使用 Zustand store 来管理用户数据。",
+  "userList": "用户列表",
+  "refresh": "刷新用户",
+  "loading": "加载中...",
+  "noUsers": "暂无用户数据",
+  "user": {
+    "id": "用户 ID",
+    "name": "姓名",
+    "email": "邮箱"
+  },
+  "actions": {
+    "select": "选择",
+    "selected": "已选中",
+    "delete": "删除"
+  },
+  "selectedUser": {
+    "title": "已选中的用户",
+    "description": "当前选中的用户详情",
+    "id": "ID",
+    "name": "姓名",
+    "email": "邮箱"
+  },
+  "notifications": {
+    "userSelected": {
+      "message": "用户已选中",
+      "title": "成功"
+    },
+    "userDeleted": {
+      "message": "用户已删除",
+      "title": "成功"
+    },
+    "deleteError": {
+      "message": "删除用户失败",
+      "title": "错误"
+    }
+  }
+}
