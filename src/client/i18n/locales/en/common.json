@@ -1,12 +1,18 @@
 {
-  "appTitle": "Hono + React Example",
-  "nav": {
-    "home": "Home",
-    "users": "Users",
-    "about": "About",
-    "menu": "Menu"
-  },
-  "footer": {
-    "copyright": "Hono + React Example Project"
-  }
+    "appTitle": "Hono + React Example",
+    "nav": {
+        "home": "Home",
+        "users": "Users",
+        "about": "About",
+        "menu": "Menu",
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout"
+    },
+    "success": "Success",
+    "error": "Error",
+    "logoutSuccess": "Logged out successfully",
+    "footer": {
+        "copyright": "Hono + React Example Project"
+    }
 }

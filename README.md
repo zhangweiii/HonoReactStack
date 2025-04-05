@@ -13,6 +13,8 @@
   <a href="#screenshots">Screenshots</a> •
   <a href="#getting-started">Getting Started</a> •
   <a href="#project-structure">Project Structure</a> •
+  <a href="#database-support">Database Support</a> •
+  <a href="#authentication">Authentication</a> •
   <a href="#state-management">State Management</a> •
   <a href="#deployment">Deployment</a> •
   <a href="#customization">Customization</a>
@@ -28,6 +30,8 @@ This template provides a complete solution for building modern full-stack applic
 
 - ⚡️ **High Performance** - Lightweight, fast API routes based on Hono
 - 🔄 **Full-Stack TypeScript** - Shared type definitions between frontend and backend for end-to-end type safety
+- 💾 **Database Support** - Integrated Prisma ORM with support for both Cloudflare D1 and MySQL databases
+- 🔐 **Authentication** - Built-in user authentication with role-based access control
 - 🧩 **Component Library** - Integrated [shadcn/ui](https://ui.shadcn.com/) for beautiful and customizable UI components
 - 📦 **State Management** - Clean and efficient state management with [Zustand](https://zustand-demo.pmnd.rs/)
 - 🎨 **Theme Switching** - Built-in dark/light theme support with persistence
@@ -85,11 +89,116 @@ Now, open [http://localhost:3000](http://localhost:3000) to view your applicatio
 │   │   ├── store/        # Zustand state management
 │   │   └── styles/       # CSS style files
 │   └── server/           # Backend Hono code
-│       └── routes/       # API route definitions
+│       ├── routes/       # API route definitions
+│       └── services/     # Database services
+├── prisma/               # Prisma schema and migrations
+├── migrations/           # D1 database migrations
 ├── public/               # Static assets
 ├── wrangler.jsonc        # Cloudflare Workers configuration
 └── package.json          # Project dependencies and scripts
 ```
+
+## Database Support
+
+This template includes database support using Prisma ORM, with compatibility for both Cloudflare D1 and MySQL databases.
+
+### Cloudflare D1 (Default)
+
+Cloudflare D1 is a serverless SQL database that works seamlessly with Cloudflare Workers.
+
+#### Setting up D1
+
+1. Create a D1 database:
+```bash
+npx wrangler d1 create your-database-name
+```
+
+2. Update your `wrangler.jsonc` with the database binding:
+```json
+"d1_databases": [
+  {
+    "binding": "DB",
+    "database_name": "your-database-name",
+    "database_id": "your-database-id"
+  }
+]
+```
+
+3. Create and apply migrations:
+```bash
+# Create a migration
+npx wrangler d1 migrations create your-database-name migration_name
+
+# Generate SQL from Prisma schema
+npx prisma migrate diff --from-empty --to-schema-datamodel ./prisma/schema.prisma --script --output migrations/xxxx_migration_name.sql
+
+# Apply migration locally
+npx wrangler d1 migrations apply your-database-name --local
+
+# Apply migration to production
+npx wrangler d1 migrations apply your-database-name --remote
+```
+
+### MySQL Support
+
+To use MySQL instead of D1:
+
+1. Update your `.env` file:
+```
+DATABASE_URL="mysql://username:password@localhost:3306/database_name"
+DATABASE_PROVIDER="mysql"
+```
+
+2. Update your Prisma schema:
+```prisma
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+```
+
+3. Generate Prisma client:
+```bash
+npx prisma generate
+```
+
+## Authentication
+
+The template includes a built-in authentication system with role-based access control.
+
+### User Registration
+
+This template restricts public registration by default. Only admin accounts can be created using a secret key. This helps prevent unauthorized registrations while allowing the site owner to maintain control.
+
+To create an admin account during registration, use the secret key:
+```json
+{
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "password": "securepassword",
+  "secretKey": "admin-secret-key-2025"
+}
+```
+
+The admin secret key is stored in the `.env` file and `wrangler.jsonc` for better security. You should change this key in production environments.
+
+### User Login
+
+Users can log in through the `/api/auth/login` endpoint:
+```json
+{
+  "email": "user@example.com",
+  "password": "userpassword"
+}
+```
+
+### Admin Functions
+
+Administrators can:
+- Activate/deactivate user accounts
+- Create new users
+- Update user roles
+- Delete users
 
 ## State Management
 
@@ -142,6 +251,10 @@ function Component() {
   }
 }
 ```
+
+#### Multilingual Error Messages
+
+All error messages in both frontend and backend are internationalized. The system automatically detects the user's language preference and displays error messages in the appropriate language. This provides a consistent user experience across the entire application.
 
 ### Notification Store
 

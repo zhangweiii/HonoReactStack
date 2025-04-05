@@ -1,59 +1,12 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
-import { getCookie } from 'hono/cookie'
+import { DatabaseService, Env } from '../services/db'
+import { getLanguage, messages } from '../utils/i18n'
+import { authenticate, authenticateAdmin } from '../middleware/auth'
 
 // 创建 API 路由
-const api = new Hono()
-
-// 语言消息
-const messages = {
-  'zh-CN': {
-    hello: '你好，这是来自 Hono API 的消息！',
-    userNotFound: '用户不存在',
-    userDeleted: '用户已删除',
-    nameMinLength: '名称至少需要 2 个字符',
-    invalidEmail: '请提供有效的电子邮件地址'
-  },
-  'en': {
-    hello: 'Hello, this is a message from the Hono API!',
-    userNotFound: 'User not found',
-    userDeleted: 'User deleted',
-    nameMinLength: 'Name must be at least 2 characters',
-    invalidEmail: 'Please provide a valid email address'
-  }
-}
-
-// 获取语言中间件
-const getLanguage = (c: any) => {
-  // 从 cookie 中获取语言设置
-  const lang = getCookie(c, 'i18nextLng') || 'zh-CN'
-  console.log('Current language from cookie:', lang)
-  // 只支持 zh-CN 和 en
-  return lang === 'en' ? 'en' : 'zh-CN'
-}
-
-// 模拟用户数据存储
-const usersData = {
-  'zh-CN': [
-    { id: 1, name: '张三', email: 'zhangsan@example.com' },
-    { id: 2, name: '李四', email: 'lisi@example.com' },
-    { id: 3, name: '王五', email: 'wangwu@example.com' }
-  ],
-  'en': [
-    { id: 1, name: 'John Doe', email: 'john@example.com' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com' }
-  ]
-}
-
-// 用户数据存储
-let users = [...usersData['zh-CN']]
-
-// 获取下一个用户 ID
-const getNextId = () => {
-  return users.length > 0 ? Math.max(...users.map(user => user.id)) + 1 : 1
-}
+const api = new Hono<{ Bindings: Env }>()
 
 // 定义 API 路由
 api.get('/hello', (c) => {
@@ -63,88 +16,367 @@ api.get('/hello', (c) => {
   })
 })
 
-// 获取所有用户
-api.get('/users', (c) => {
-  const lang = getLanguage(c)
-  // 根据语言选择用户数据
-  users = [...usersData[lang]]
-  return c.json(users)
+// 用户相关路由
+// 获取所有用户 (管理员路由)
+api.get('/admin/users', authenticateAdmin, async (c) => {
+  try {
+    const db = DatabaseService.getInstance(c.env)
+    const users = await db.getUsers()
+
+    // 不返回密码
+    const usersWithoutPassword = users.map((user: any) => {
+      const { password, ...userWithoutPassword } = user
+      return userWithoutPassword
+    })
+
+    return c.json(usersWithoutPassword)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].fetchUsersFailed }, 500)
+  }
 })
 
 // 获取单个用户
-api.get('/users/:id', (c) => {
-  const id = parseInt(c.req.param('id'))
-  const user = users.find(u => u.id === id)
+api.get('/users/:id', authenticate, async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'))
+    const db = DatabaseService.getInstance(c.env)
+    const user = await db.getUserById(id)
 
-  if (!user) {
+    if (!user) {
+      const lang = getLanguage(c)
+      return c.json({ error: messages[lang].userNotFound }, 404)
+    }
+
+    // 不返回密码
+    const { password, ...userWithoutPassword } = user
+
+    return c.json(userWithoutPassword)
+  } catch (error) {
+    console.error('Error fetching user:', error)
     const lang = getLanguage(c)
-    return c.json({ error: messages[lang].userNotFound }, 404)
+    return c.json({ error: messages[lang].fetchUserFailed }, 500)
   }
-
-  return c.json(user)
 })
 
-// 创建用户验证器
+// 创建用户验证器 (管理员路由)
 const createUserSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email()
+  name: z.string().min(2).optional(),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(['admin', 'user']).optional(),
+  isActive: z.boolean().optional()
 })
 
-// 创建用户
-api.post('/users', zValidator('json', createUserSchema), async (c) => {
-  const userData = await c.req.json()
-  const newUser = {
-    id: getNextId(),
-    name: userData.name,
-    email: userData.email
-  }
+// 创建用户 (管理员路由)
+api.post('/admin/users', authenticateAdmin, zValidator('json', createUserSchema), async (c) => {
+  try {
 
-  users.push(newUser)
-  return c.json(newUser, 201)
+    const userData = await c.req.json()
+    const db = DatabaseService.getInstance(c.env)
+
+    // 检查邮箱是否已存在
+    const existingUser = await db.getUserByEmail(userData.email)
+    if (existingUser) {
+      const lang = getLanguage(c)
+      return c.json({ error: messages[lang].emailExists }, 400)
+    }
+
+    const newUser = await db.createUser(userData)
+
+    // 不返回密码
+    const { password, ...userWithoutPassword } = newUser
+
+    const lang = getLanguage(c)
+    return c.json({ message: messages[lang].userCreated, user: userWithoutPassword }, 201)
+  } catch (error) {
+    console.error('Error creating user:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].createUserFailed }, 500)
+  }
 })
 
 // 更新用户验证器
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
-  email: z.string().email().optional()
+  email: z.string().email().optional(),
+  password: z.string().min(6).optional()
 })
 
-// 更新用户
-api.put('/users/:id', zValidator('json', updateUserSchema), async (c) => {
-  const id = parseInt(c.req.param('id'))
-  const userData = await c.req.json()
+// 更新用户个人信息
+api.put('/users/:id', authenticate, zValidator('json', updateUserSchema), async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'))
+    const userData = await c.req.json()
+    const db = DatabaseService.getInstance(c.env)
 
-  const userIndex = users.findIndex(u => u.id === id)
-  if (userIndex === -1) {
+    // 检查用户是否存在
+    const existingUser = await db.getUserById(id)
+    if (!existingUser) {
+      const lang = getLanguage(c)
+      return c.json({ error: messages[lang].userNotFound }, 404)
+    }
+
+    // 获取当前用户信息
+    const currentUser = c.get('user')
+
+    // 确保用户只能更新自己的信息
+    if (currentUser.id !== id && currentUser.role !== 'admin') {
+      const lang = getLanguage(c)
+      return c.json({ error: messages[lang].notYourAccount }, 403)
+    }
+
+    // 如果更新邮箱，检查邮箱是否已被其他用户使用
+    if (userData.email && userData.email !== existingUser.email) {
+      const userWithEmail = await db.getUserByEmail(userData.email)
+      if (userWithEmail && userWithEmail.id !== id) {
+        const lang = getLanguage(c)
+        return c.json({ error: messages[lang].emailInUse }, 400)
+      }
+    }
+
+    // 普通用户只能更新名称、邮箱和密码，不能更新角色和激活状态
+    const updatedUser = await db.updateUser(id, {
+      name: userData.name,
+      email: userData.email,
+      password: userData.password
+    })
+
+    // 不返回密码
+    const { password, ...userWithoutPassword } = updatedUser
+
     const lang = getLanguage(c)
-    return c.json({ error: messages[lang].userNotFound }, 404)
+    return c.json({ message: messages[lang].userUpdated, user: userWithoutPassword })
+  } catch (error) {
+    console.error('Error updating user:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].updateUserFailed }, 500)
   }
-
-  // 更新用户数据
-  users[userIndex] = {
-    ...users[userIndex],
-    ...userData
-  }
-
-  return c.json(users[userIndex])
 })
 
-// 删除用户
-api.delete('/users/:id', (c) => {
-  const id = parseInt(c.req.param('id'))
+// 管理员更新用户验证器
+const adminUpdateUserSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(6).optional(),
+  role: z.enum(['admin', 'user']).optional(),
+  isActive: z.boolean().optional()
+})
 
-  const userIndex = users.findIndex(u => u.id === id)
-  if (userIndex === -1) {
+// 管理员更新用户
+api.put('/admin/users/:id', authenticateAdmin, zValidator('json', adminUpdateUserSchema), async (c) => {
+  try {
+
+    const id = parseInt(c.req.param('id'))
+    const userData = await c.req.json()
+    const db = DatabaseService.getInstance(c.env)
+
+    // 检查用户是否存在
+    const existingUser = await db.getUserById(id)
+    if (!existingUser) {
+      const lang = getLanguage(c)
+      return c.json({ error: messages[lang].userNotFound }, 404)
+    }
+
+    // 如果更新邮箱，检查邮箱是否已被其他用户使用
+    if (userData.email && userData.email !== existingUser.email) {
+      const userWithEmail = await db.getUserByEmail(userData.email)
+      if (userWithEmail && userWithEmail.id !== id) {
+        const lang = getLanguage(c)
+        return c.json({ error: messages[lang].emailInUse }, 400)
+      }
+    }
+
+    const updatedUser = await db.updateUser(id, userData)
+
+    // 不返回密码
+    const { password, ...userWithoutPassword } = updatedUser
+
     const lang = getLanguage(c)
-    return c.json({ error: messages[lang].userNotFound }, 404)
+    return c.json({ message: messages[lang].userUpdated, user: userWithoutPassword })
+  } catch (error) {
+    console.error('Error updating user:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].updateUserFailed }, 500)
   }
+})
 
-  // 删除用户
-  const deletedUser = users[userIndex]
-  users = users.filter(u => u.id !== id)
+// 删除用户 (管理员路由)
+api.delete('/admin/users/:id', authenticateAdmin, async (c) => {
+  try {
 
-  const lang = getLanguage(c)
-  return c.json({ message: messages[lang].userDeleted, user: deletedUser })
+    const id = parseInt(c.req.param('id'))
+    const db = DatabaseService.getInstance(c.env)
+
+    // 检查用户是否存在
+    const existingUser = await db.getUserById(id)
+    if (!existingUser) {
+      const lang = getLanguage(c)
+      return c.json({ error: messages[lang].userNotFound }, 404)
+    }
+
+    // 防止删除最后一个管理员
+    if (existingUser.role === 'admin') {
+      const admins = await db.getUsers().then(users => users.filter((u: any) => u.role === 'admin'))
+      if (admins.length <= 1) {
+        const lang = getLanguage(c)
+        return c.json({ error: messages[lang].lastAdmin }, 400)
+      }
+    }
+
+    const deletedUser = await db.deleteUser(id)
+
+    // 不返回密码
+    const { password, ...userWithoutPassword } = deletedUser
+
+    const lang = getLanguage(c)
+    return c.json({ message: messages[lang].userDeleted, user: userWithoutPassword })
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].deleteUserFailed }, 500)
+  }
+})
+
+// 登录相关路由
+// 登录验证器
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6)
+})
+
+// 登录路由
+api.post('/auth/login', zValidator('json', loginSchema), async (c) => {
+  try {
+    const { email, password } = await c.req.json()
+    const db = DatabaseService.getInstance(c.env)
+    const result = await db.validateUser(email, password)
+    const lang = getLanguage(c)
+
+    if (!result) {
+      return c.json({ error: messages[lang].loginFailed }, 401)
+    }
+
+    if ('error' in result && result.error === 'account_disabled') {
+      return c.json({ error: messages[lang].accountDisabled }, 403)
+    }
+
+    return c.json({
+      message: messages[lang].loginSuccess,
+      user: result
+    })
+  } catch (error) {
+    console.error('Error during login:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].loginFailed }, 500)
+  }
+})
+
+// 注册验证器
+const registerSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email(),
+  password: z.string().min(6),
+  secretKey: z.string().optional() // 管理员注册密钥
+})
+
+// 注册路由 - 默认注册的用户需要管理员激活
+api.post('/auth/register', zValidator('json', registerSchema), async (c) => {
+  try {
+    const userData = await c.req.json()
+    const db = DatabaseService.getInstance(c.env)
+    const lang = getLanguage(c)
+
+    // 检查是否提供了管理员密钥
+    const adminSecretKey = c.env.ADMIN_SECRET_KEY || 'admin-secret-key-2025'
+    const isAdmin = userData.secretKey === adminSecretKey
+
+    // 限制公开注册，只允许管理员注册
+    if (!isAdmin) {
+      return c.json({ error: messages[lang].registrationDisabled }, 403)
+    }
+
+    // 检查邮箱是否已存在
+    const existingUser = await db.getUserByEmail(userData.email)
+    if (existingUser) {
+      return c.json({ error: messages[lang].emailExists }, 400)
+    }
+
+    // 创建用户
+    const { secretKey, ...userDataWithoutSecretKey } = userData
+    const newUser = await db.createUser({
+      ...userDataWithoutSecretKey,
+      role: isAdmin ? 'admin' : 'user',
+      isActive: isAdmin // 管理员账户自动激活，普通用户需要管理员激活
+    })
+
+    // 不返回密码
+    const { password, ...userWithoutPassword } = newUser
+
+    return c.json({
+      message: isAdmin ? messages[lang].loginSuccess : messages[lang].registerSuccess,
+      user: userWithoutPassword
+    }, 201)
+  } catch (error) {
+    console.error('Error during registration:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].registrationFailed }, 500)
+  }
+})
+
+// 管理员激活用户账户
+api.post('/admin/users/:id/activate', authenticateAdmin, async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'))
+    const db = DatabaseService.getInstance(c.env)
+    const lang = getLanguage(c)
+
+    // 检查用户是否存在
+    const existingUser = await db.getUserById(id)
+    if (!existingUser) {
+      return c.json({ error: messages[lang].userNotFound }, 404)
+    }
+
+    const updatedUser = await db.activateUser(id)
+    const { password, ...userWithoutPassword } = updatedUser
+
+    return c.json({
+      message: messages[lang].accountActivated,
+      user: userWithoutPassword
+    })
+  } catch (error) {
+    console.error('Error activating user:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].activateUserFailed }, 500)
+  }
+})
+
+// 管理员禁用用户账户
+api.post('/admin/users/:id/deactivate', authenticateAdmin, async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'))
+    const db = DatabaseService.getInstance(c.env)
+    const lang = getLanguage(c)
+
+    // 检查用户是否存在
+    const existingUser = await db.getUserById(id)
+    if (!existingUser) {
+      return c.json({ error: messages[lang].userNotFound }, 404)
+    }
+
+    const updatedUser = await db.deactivateUser(id)
+    const { password, ...userWithoutPassword } = updatedUser
+
+    return c.json({
+      message: messages[lang].accountDeactivated,
+      user: userWithoutPassword
+    })
+  } catch (error) {
+    console.error('Error deactivating user:', error)
+    const lang = getLanguage(c)
+    return c.json({ error: messages[lang].deactivateUserFailed }, 500)
+  }
 })
 
 export default api

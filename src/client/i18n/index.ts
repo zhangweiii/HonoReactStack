@@ -8,23 +8,27 @@ import enCommon from './locales/en/common.json';
 import enHome from './locales/en/home.json';
 import enAbout from './locales/en/about.json';
 import enUsers from './locales/en/users.json';
+import enAuth from './locales/en/auth.json';
 import zhCommon from './locales/zh-CN/common.json';
 import zhHome from './locales/zh-CN/home.json';
 import zhAbout from './locales/zh-CN/about.json';
 import zhUsers from './locales/zh-CN/users.json';
+import zhAuth from './locales/zh-CN/auth.json';
 
 const resources = {
   en: {
     common: enCommon,
     home: enHome,
     about: enAbout,
-    users: enUsers
+    users: enUsers,
+    auth: enAuth
   },
   'zh-CN': {
     common: zhCommon,
     home: zhHome,
     about: zhAbout,
-    users: zhUsers
+    users: zhUsers,
+    auth: zhAuth
   }
 };
 
@@ -40,7 +44,7 @@ i18n
     resources,
     fallbackLng: 'zh-CN',
     defaultNS: 'common',
-    ns: ['common', 'home', 'about', 'users'],
+    ns: ['common', 'home', 'about', 'users', 'auth'],
 
     detection: {
       order: ['cookie', 'localStorage', 'navigator'],

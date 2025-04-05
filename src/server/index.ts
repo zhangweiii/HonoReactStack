@@ -1,16 +1,17 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import api from './routes/api'
+import { Env } from './services/db'
 
-// 导入 Cloudflare Workers 类型定义
-type Env = {
+// 扩展 Env 类型以包含 ASSETS
+type EnvWithAssets = Env & {
   ASSETS?: {
     fetch: (req: Request) => Promise<Response>;
   };
 };
 
 // 创建服务器实例
-const server = new Hono<{ Bindings: Env }>()
+const server = new Hono<{ Bindings: EnvWithAssets }>()
 
 // 添加 CORS 中间件
 server.use('*', cors({
@@ -64,7 +65,7 @@ if (isDev) {
     const path = url.pathname
 
     // 检查是否是 API 路由 (这些应该已经被前面的路由处理器处理)
-    if (path.startsWith('/api/') && !path.startsWith('/api/users')) {
+    if (path.startsWith('/api/')) {
       return c.json({ error: 'API 路由不存在' }, 404)
     }
 

@@ -1,39 +1,41 @@
 {
-  "title": "User Management",
-  "description": "This page demonstrates how to use Zustand store to manage user data.",
-  "userList": "User List",
-  "refresh": "Refresh Users",
-  "loading": "Loading...",
-  "noUsers": "No user data",
-  "user": {
-    "id": "User ID",
-    "name": "Name",
-    "email": "Email"
-  },
-  "actions": {
-    "select": "Select",
-    "selected": "Selected",
-    "delete": "Delete"
-  },
-  "selectedUser": {
-    "title": "Selected User",
-    "description": "Details of the currently selected user",
-    "id": "ID",
-    "name": "Name",
-    "email": "Email"
-  },
-  "notifications": {
-    "userSelected": {
-      "message": "User selected",
-      "title": "Success"
+    "title": "User Management",
+    "description": "This page demonstrates how to use Zustand store to manage user data.",
+    "userList": "User List",
+    "refresh": "Refresh Users",
+    "loading": "Loading...",
+    "noUsers": "No user data",
+    "user": {
+        "id": "User ID",
+        "name": "Name",
+        "email": "Email"
     },
-    "userDeleted": {
-      "message": "User deleted",
-      "title": "Success"
+    "actions": {
+        "select": "Select",
+        "selected": "Selected",
+        "delete": "Delete"
     },
-    "deleteError": {
-      "message": "Failed to delete user",
-      "title": "Error"
-    }
-  }
+    "selectedUser": {
+        "title": "Selected User",
+        "description": "Details of the currently selected user",
+        "id": "ID",
+        "name": "Name",
+        "email": "Email"
+    },
+    "notifications": {
+        "userSelected": {
+            "message": "User selected",
+            "title": "Success"
+        },
+        "userDeleted": {
+            "message": "User deleted",
+            "title": "Success"
+        },
+        "deleteError": {
+            "message": "Failed to delete user",
+            "title": "Error"
+        }
+    },
+    "fetchError": "Failed to fetch users: {{status}}",
+    "unknownFetchError": "An unknown error occurred while fetching users"
 }

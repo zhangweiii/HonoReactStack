@@ -1,0 +1,25 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+// 根据环境变量 DATABASE_PROVIDER 选择数据库提供商
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  name      String?
+  password  String
+  role      String    @default("user") // 用户角色: admin, user
+  isActive  Boolean   @default(true)  // 账户是否激活
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}

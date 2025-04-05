@@ -1,17 +1,37 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { ThemeToggle } from './ThemeToggle'
 import { Notifications } from './Notifications'
 import LanguageSelector from '../i18n/LanguageSelector'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, User, LogOut, LogIn, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useNotifications } from './Notifications'
 
 const Layout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { t } = useTranslation('common')
+  const { isAuthenticated, user, logout } = useAuthStore()
+  const { showSuccess } = useNotifications()
+  const navigate = useNavigate()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  const handleLogout = () => {
+    logout()
+    showSuccess(t('logoutSuccess'), { title: t('success') })
+    navigate('/')
   }
 
   return (
@@ -30,6 +50,36 @@ const Layout = () => {
           <div className="flex items-center space-x-2">
             <LanguageSelector />
             <ThemeToggle />
+
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User size={20} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{user?.name || user?.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t('nav.logout')}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="hidden md:flex space-x-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  {t('nav.login')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/register')}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  {t('nav.register')}
+                </Button>
+              </div>
+            )}
+
             <button
               className="md:hidden p-2 rounded-md hover:bg-muted transition-colors"
               onClick={toggleMenu}
@@ -61,11 +111,40 @@ const Layout = () => {
             </Link>
             <Link
               to="/about"
-              className="py-3 hover:text-primary transition-colors"
+              className="py-3 border-b border-border hover:text-primary transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               {t('nav.about')}
             </Link>
+
+            {isAuthenticated ? (
+              <button
+                className="py-3 text-left text-destructive hover:text-destructive/80 transition-colors"
+                onClick={() => {
+                  handleLogout()
+                  setIsMenuOpen(false)
+                }}
+              >
+                {t('nav.logout')}
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="py-3 border-b border-border hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('nav.login')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="py-3 hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {t('nav.register')}
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       )}
