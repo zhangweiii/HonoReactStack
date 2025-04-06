@@ -10,18 +10,15 @@ import './styles/globals.css'
 
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
-import { useNavigate } from 'react-router-dom'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
-  const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuthStore()
 
-  // 如果用户未登录，自动重定向到登录页面
+  // 打印调试信息，查看认证状态
   useEffect(() => {
-    if (!isAuthenticated && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-      navigate('/login')
-    }
-  }, [isAuthenticated, navigate])
+    console.log('App - isAuthenticated:', isAuthenticated);
+    console.log('App - user:', user);
+  }, [isAuthenticated, user]);
 
   return (
     <Routes>

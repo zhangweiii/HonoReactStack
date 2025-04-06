@@ -138,6 +138,39 @@ export const useAuthStore = create<AuthState>()(
         }
       }),
       {
+        // 初始化时检查并恢复认证状态
+        onRehydrateStorage: () => {
+          // 在存储恢复前打印当前状态
+          console.log('Auth store before rehydration - document.cookie:', document.cookie);
+
+          return (newState) => {
+            // 在存储恢复后打印状态
+            console.log('Auth store rehydrated:', newState);
+
+            if (newState) {
+              // 如果有用户数据但 isAuthenticated 为 false，尝试修复
+              if (newState.user && !newState.isAuthenticated) {
+                console.log('Fixing inconsistent auth state: user exists but not authenticated');
+                // 强制设置为已认证状态
+                setTimeout(() => {
+                  useAuthStore.setState({ isAuthenticated: true });
+                }, 0);
+              }
+
+              // 确保 cookie 与用户 ID 一致
+              if (newState.user) {
+                const cookies = document.cookie.split('; ');
+                const userIdCookie = cookies.find(cookie => cookie.startsWith('userId='));
+
+                if (!userIdCookie) {
+                  console.log('Restoring userId cookie for user:', newState.user.id);
+                  // 如果没有 cookie，重新设置
+                  document.cookie = `userId=${newState.user.id}; path=/; max-age=86400; SameSite=Strict`;
+                }
+              }
+            }
+          };
+        },
         name: 'auth-storage', // localStorage 中的键名
         partialize: (state) => ({
           user: state.user,

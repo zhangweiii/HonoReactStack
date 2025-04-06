@@ -192,6 +192,16 @@ npx prisma generate
 }
 ```
 
+#### 演示账号
+
+为了演示目的，您可以使用以下账号：
+
+**访客账号：**
+```
+email: guest@guest.com
+password: guest123
+```
+
 ### 管理员功能
 
 管理员可以：

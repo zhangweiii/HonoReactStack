@@ -12,26 +12,33 @@ import { Eye, EyeOff } from 'lucide-react'
 const LoginPage = () => {
   const { t } = useTranslation('auth')
   const { login, error, isLoading, clearError } = useAuthStore()
-  const { showSuccess, showError } = useNotifications()
+  const { showSuccess } = useNotifications()
   const navigate = useNavigate()
-  
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
-    
+
     try {
       await login(email, password)
+      // 打印登录后的状态
+      console.log('Login successful, auth state:', useAuthStore.getState())
       showSuccess(t('loginSuccess'), { title: t('success') })
-      navigate('/')
+
+      // 延迟一下再跳转，确保状态已更新
+      setTimeout(() => {
+        navigate('/')
+      }, 100)
     } catch (err) {
       // 错误已经在 store 中处理
+      console.error('Login error:', err)
     }
   }
-  
+
   return (
     <div className="flex justify-center items-center min-h-[80vh]">
       <Card className="w-full max-w-md">
@@ -43,7 +50,7 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t('email')}</Label>
-              <Input 
+              <Input
                 id="email"
                 type="email"
                 placeholder={t('emailPlaceholder')}
@@ -52,11 +59,11 @@ const LoginPage = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">{t('password')}</Label>
               <div className="relative">
-                <Input 
+                <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder={t('passwordPlaceholder')}
@@ -75,13 +82,13 @@ const LoginPage = () => {
                 </Button>
               </div>
             </div>
-            
+
             {error && (
               <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
                 {error}
               </div>
             )}
-            
+
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? t('loggingIn') : t('login')}
             </Button>

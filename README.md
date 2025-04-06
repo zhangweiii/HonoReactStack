@@ -192,6 +192,16 @@ Users can log in through the `/api/auth/login` endpoint:
 }
 ```
 
+#### Demo Accounts
+
+For demonstration purposes, you can use the following accounts:
+
+**Guest Account:**
+```
+email: guest@guest.com
+password: guest123
+```
+
 ### Admin Functions
 
 Administrators can:

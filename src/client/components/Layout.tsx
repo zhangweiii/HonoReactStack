@@ -21,6 +21,9 @@ const Layout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { t } = useTranslation('common')
   const { isAuthenticated, user, logout } = useAuthStore()
+
+  // 打印导航栏中的认证状态
+  console.log('Layout - Auth state:', { isAuthenticated, user })
   const { showSuccess } = useNotifications()
   const navigate = useNavigate()
 
@@ -43,7 +46,9 @@ const Layout = () => {
             <h1 className="text-xl font-bold">{t('appTitle')}</h1>
             <nav className="hidden md:flex space-x-4">
               <Link to="/" className="hover:text-primary transition-colors">{t('nav.home')}</Link>
-              <Link to="/users" className="hover:text-primary transition-colors">{t('nav.users')}</Link>
+              {isAuthenticated && (
+                <Link to="/users" className="hover:text-primary transition-colors">{t('nav.users')}</Link>
+              )}
               <Link to="/about" className="hover:text-primary transition-colors">{t('nav.about')}</Link>
             </nav>
           </div>
@@ -102,13 +107,15 @@ const Layout = () => {
             >
               {t('nav.home')}
             </Link>
-            <Link
-              to="/users"
-              className="py-3 border-b border-border hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('nav.users')}
-            </Link>
+            {isAuthenticated && (
+              <Link
+                to="/users"
+                className="py-3 border-b border-border hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t('nav.users')}
+              </Link>
+            )}
             <Link
               to="/about"
               className="py-3 border-b border-border hover:text-primary transition-colors"
