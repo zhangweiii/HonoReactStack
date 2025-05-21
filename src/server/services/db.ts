@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaD1 } from '@prisma/adapter-d1';
+import * as bcrypt from 'bcryptjs';
 
 // 环境类型定义
 export interface Env {
@@ -8,7 +9,16 @@ export interface Env {
   ADMIN_SECRET_KEY?: string;
 }
 
+const SALT_ROUNDS = 10;
+
 // 数据库服务类
+// IMPORTANT: Regarding plaintext passwords for existing users.
+// Users created before the implementation of password hashing (bcrypt)
+// will still have their passwords stored in plaintext in the database.
+// This represents a significant security risk.
+// It is strongly recommended to implement a migration strategy for existing plaintext passwords.
+// One common approach is to force users to reset their password upon their next login,
+// at which point the new password will be hashed and stored correctly.
 export class DatabaseService {
   private prisma: PrismaClient;
   private static instance: DatabaseService;
@@ -46,28 +56,63 @@ export class DatabaseService {
 
   // 用户相关操作
   public async getUsers() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
   }
 
   public async getUserById(id: number) {
     return this.prisma.user.findUnique({
-      where: { id }
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
     });
   }
 
   public async getUserByEmail(email: string) {
     return this.prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
     });
   }
 
   public async createUser(data: { name?: string; email: string; password: string; role?: string; isActive?: boolean }) {
+    const hashedPassword = bcrypt.hashSync(data.password, SALT_ROUNDS);
     return this.prisma.user.create({
-      data
+      data: {
+        ...data,
+        password: hashedPassword,
+      }
     });
   }
 
   public async updateUser(id: number, data: { name?: string; email?: string; password?: string; role?: string; isActive?: boolean }) {
+    if (data.password) {
+      data.password = bcrypt.hashSync(data.password, SALT_ROUNDS);
+    }
     return this.prisma.user.update({
       where: { id },
       data
@@ -83,7 +128,7 @@ export class DatabaseService {
   // 登录相关方法
   public async validateUser(email: string, password: string) {
     const user = await this.getUserByEmail(email);
-    if (!user || user.password !== password) {
+    if (!user || !bcrypt.compareSync(password, user.password)) {
       return null;
     }
 

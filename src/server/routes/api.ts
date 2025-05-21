@@ -288,14 +288,29 @@ api.post('/auth/register', zValidator('json', registerSchema), async (c) => {
     const db = DatabaseService.getInstance(c.env)
     const lang = getLanguage(c)
 
-    // 检查是否提供了管理员密钥
-    const adminSecretKey = c.env.ADMIN_SECRET_KEY || 'admin-secret-key-2025'
-    const isAdmin = userData.secretKey === adminSecretKey
+    // CRITICAL SECURITY: ADMIN_SECRET_KEY must be set as an environment variable with a strong, unique value for admin registration to function securely. Do not use default or weak keys.
+    const adminSecretKey = c.env.ADMIN_SECRET_KEY;
 
-    // 限制公开注册，只允许管理员注册
-    if (!isAdmin) {
-      return c.json({ error: messages[lang].registrationDisabled }, 403)
+    // Check if an admin registration is being attempted
+    if (userData.secretKey) {
+      // If admin registration is attempted but the server key is not configured
+      if (!adminSecretKey) {
+        console.error('CRITICAL: Admin registration attempted but ADMIN_SECRET_KEY is not set.');
+        return c.json({ error: messages[lang].adminRegistrationNotConfigured }, 500);
+      }
+      // If server key is configured, validate the provided secretKey
+      if (userData.secretKey !== adminSecretKey) {
+        return c.json({ error: messages[lang].invalidAdminSecretKey }, 403); // Or a more generic error
+      }
+    } else {
+      // If no secretKey is provided (regular user registration attempt)
+      return c.json({ error: messages[lang].registrationDisabled }, 403);
     }
+
+    // At this point, it's a valid admin registration attempt if userData.secretKey was provided and matched.
+    // If userData.secretKey was not provided, the above block would have already returned an error.
+    const isAdmin = userData.secretKey === adminSecretKey;
+
 
     // 检查邮箱是否已存在
     const existingUser = await db.getUserByEmail(userData.email)
@@ -304,20 +319,21 @@ api.post('/auth/register', zValidator('json', registerSchema), async (c) => {
     }
 
     // 创建用户
-    const { secretKey, ...userDataWithoutSecretKey } = userData
+    // Ensure secretKey is not passed to createUser
+    const { secretKey, ...userDataForCreation } = userData;
     const newUser = await db.createUser({
-      ...userDataWithoutSecretKey,
-      role: isAdmin ? 'admin' : 'user',
-      isActive: isAdmin // 管理员账户自动激活，普通用户需要管理员激活
-    })
+      ...userDataForCreation,
+      role: 'admin', // Since only admin registration is allowed if secretKey is validated
+      isActive: true   // Admin accounts are activated by default
+    });
 
     // 不返回密码
     const { password, ...userWithoutPassword } = newUser
 
     return c.json({
-      message: isAdmin ? messages[lang].loginSuccess : messages[lang].registerSuccess,
+      message: messages[lang].adminUserCreated, // Assuming you'll add this message
       user: userWithoutPassword
-    }, 201)
+    }, 201);
   } catch (error) {
     console.error('Error during registration:', error)
     const lang = getLanguage(c)
